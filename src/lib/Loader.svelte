@@ -16,16 +16,16 @@
     &-spinner {
       width: var(--size);
       height: var(--size);
-      border: 4px solid rgba(204, 204, 204, 0.1);
-      border-top-color: #b3b3b3;
+      border: 3px solid rgba(148, 163, 184, 0.25);
+      border-top-color: var(--color-primary-strong);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
     &-text {
-      margin-left: 10px;
-      font-size: 20px;
-      font-weight: bold;
-      color: #b3b3b3;
+      margin-left: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-muted);
     }
     @keyframes spin {
       to {

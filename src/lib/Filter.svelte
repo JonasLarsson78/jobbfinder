@@ -34,64 +34,221 @@
 </script>
 
 <form on:submit|preventDefault={submit} class="filter">
-  <label>
-    Stad(er)
-    <input placeholder="Lund,Malmö,Helsingborg" bind:value={city} />
-  </label>
+  <fieldset class="filter-card">
+    <legend>Sök jobb</legend>
 
-  <label>
-    Sökord
-    <input placeholder="frontend-utvecklare" bind:value={q} />
-  </label>
+    <div class="filter-row">
+      <label>
+        <span class="label-text">Stad(er)</span>
+        <input
+          placeholder="Lund,Malmö,Helsingborg"
+          bind:value={city}
+          aria-label="Stad eller städer"
+        />
+      </label>
 
-  <button type="submit" disabled={loading}> Sök </button>
-  <div><i><b>Default stad(er):</b></i> {defaultCities}</div>
-  <div><i><b>Default sökord:</b></i> {defaultQ}</div>
-  <div class="note">
-    <i>Bara tryck på "Sök" för att använda standardvärdena</i>
-  </div>
+      <label>
+        <span class="label-text">Sökord</span>
+        <input
+          placeholder="frontend-utvecklare"
+          bind:value={q}
+          aria-label="Sökord"
+        />
+      </label>
 
-  {#if loading}
-    <Loader size={20} text="Läser..." />
-  {/if}
+      <button type="submit" disabled={loading}>
+        {#if loading}
+          Söker...
+        {:else}
+          Sök
+        {/if}
+      </button>
+    </div>
 
-  {#if error}
-    <div class="error">{error}</div>
-  {/if}
+    <div class="helper-text">
+      <span>
+        <b>Standardstad(er):</b>
+        {defaultCities}
+      </span>
+      <span>
+        <b>Standardsökord:</b>
+        {defaultQ}
+      </span>
+      <span class="hint"
+        >Lämna fälten tomma och tryck på "Sök" för att använda standardvärdena.</span
+      >
+    </div>
+
+    {#if loading}
+      <div class="loader-row">
+        <Loader size={18} text="Hämtar annonser" />
+      </div>
+    {/if}
+
+    {#if error}
+      <div class="error" role="alert">{error}</div>
+    {/if}
+  </fieldset>
 </form>
 
 <style scoped>
   .filter {
-    display: flex;
-    gap: 12px;
-    align-items: end;
-    flex-wrap: wrap;
+    margin-top: 8px;
   }
+
+  .filter-card {
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: 16px 16px 14px;
+    margin: 0;
+    background: #ffffff;
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .filter-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #2563eb, #0ea5e9);
+  }
+
+  .filter-card legend {
+    padding: 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-main);
+    background: #ffffff;
+  }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    align-items: flex-end;
+    padding: 10px 10px 8px;
+    margin: 10px -6px 0;
+    border-radius: 8px;
+    background: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.04),
+      rgba(148, 163, 184, 0.03)
+    );
+  }
+
   label {
     display: flex;
     flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-text-main);
+  }
+
+  .label-text {
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  input {
+    min-width: 260px;
+    padding: 7px 9px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-strong);
+    font-size: 14px;
+    color: var(--color-text-main);
+    background: #ffffff;
+    transition:
+      border-color 120ms ease,
+      box-shadow 120ms ease,
+      background-color 120ms ease;
+  }
+
+  input::placeholder {
+    color: var(--color-text-soft);
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--color-primary-strong);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+    background: #ffffff;
+  }
+
+  button {
+    min-width: 110px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    background: linear-gradient(90deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+    transition:
+      background 120ms ease,
+      box-shadow 120ms ease,
+      transform 80ms ease,
+      opacity 80ms ease;
+  }
+
+  button:hover:enabled {
+    background: linear-gradient(90deg, #1d4ed8, #1d4ed8);
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.25);
+    transform: translateY(-0.5px);
+  }
+
+  button:active:enabled {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .helper-text {
+    margin-top: 10px;
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    border-radius: 6px;
+    background: rgba(148, 163, 184, 0.08);
+  }
+
+  .helper-text b {
+    font-weight: 600;
+  }
+
+  .hint {
+    flex-basis: 100%;
+  }
+
+  .loader-row {
+    margin-top: 10px;
+  }
+
+  .error {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-danger);
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
     font-size: 13px;
   }
-  input {
-    min-width: 300px;
-    padding: 6px 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  button {
-    min-width: 100px;
-    padding: 8px 12px;
-    background: #2196f3;
-    color: white;
-    border: none;
-    border-radius: 4px;
-  }
-  .error {
-    color: #c00;
-    margin-left: 8px;
-  }
-  .note {
-    flex-basis: 100%;
-    white-space: normal;
+
+  @media (max-width: 720px) {
+    input {
+      min-width: min(100%, 320px);
+    }
   }
 </style>
