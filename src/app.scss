@@ -43,7 +43,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(180deg, #f3f4f6 0, #eef1f5 40%, #e2e8f0 100%);
+  /* Still och neutral bakgrund så scroll inte "rör" gradienten */
+  background-color: var(--color-bg);
 }
 
 #app {

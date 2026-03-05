@@ -1,7 +1,30 @@
 import { writable } from 'svelte/store';
 
+const STORAGE_KEY = 'jobbfinder:jobs';
+
+const loadInitialJobs = () => {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const persistJobs = (value) => {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+  } catch {
+    // ignore write errors
+  }
+};
+
 const createJobs = () => {
-  const { subscribe, set, update } = writable([]);
+  const { subscribe, set, update } = writable(loadInitialJobs());
 
   const transformApiData = (data) => {
     if (!data) return [];
@@ -58,13 +81,20 @@ const createJobs = () => {
     set,
     update,
     loadFromApi(apiData) {
-      set(transformApiData(apiData));
+      const transformed = transformApiData(apiData);
+      set(transformed);
+      persistJobs(transformed);
     },
     addCityEntry(entry) {
-      update((list) => [...list, entry]);
+      update((list) => {
+        const next = [...list, entry];
+        persistJobs(next);
+        return next;
+      });
     },
     clear() {
       set([]);
+      persistJobs([]);
     },
   };
 };

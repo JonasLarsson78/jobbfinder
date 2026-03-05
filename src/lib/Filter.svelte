@@ -3,6 +3,9 @@
   import request from '../utils/request.js';
   import { jobs } from '../store/jobs.js';
   import Loader from './Loader.svelte';
+  import { get } from 'svelte/store';
+  import { searchFilter } from '../store/search.js';
+  import capitalizeCommaSeparated from '../utils/capitalizeCommaSeparated.js';
 
   const dispatch = createEventDispatcher();
 
@@ -13,18 +16,77 @@
   const defaultCities = 'Lund,Malmö,Helsingborg';
   const defaultQ = 'frontend-utvecklare';
 
+  // Läs in ev. sparade filtervärden från persisted store
+  const initialFilter = get(searchFilter);
+  if (initialFilter) {
+    city = initialFilter.city || '';
+    q = initialFilter.q || '';
+  }
+
+  // Spara filtervärden löpande så de alltid är persistenta
+  $: searchFilter.set({ city, q });
+
+  function computeResultCount(data) {
+    if (!data) return { count: 0, groups: 0 };
+
+    let queries = [];
+    if (Array.isArray(data.queries)) {
+      queries = data.queries;
+    } else if (Array.isArray(data)) {
+      queries = data;
+    } else if (
+      data.city ||
+      data.result ||
+      data.afMatches ||
+      data.linkedinMatches
+    ) {
+      queries = [data];
+    } else {
+      return { count: 0, groups: 0 };
+    }
+
+    let total = 0;
+    let groupsWithHits = 0;
+    for (const qItem of queries) {
+      const af =
+        qItem.result && Array.isArray(qItem.result.afMatches)
+          ? qItem.result.afMatches
+          : Array.isArray(qItem.afMatches)
+            ? qItem.afMatches
+            : [];
+
+      const linkedin =
+        qItem.result && Array.isArray(qItem.result.linkedinMatches)
+          ? qItem.result.linkedinMatches
+          : Array.isArray(qItem.linkedinMatches)
+            ? qItem.linkedinMatches
+            : [];
+
+      const countForCity = (af?.length || 0) + (linkedin?.length || 0);
+      total += countForCity;
+      if (countForCity > 0) {
+        groupsWithHits += 1;
+      }
+    }
+
+    return { count: total, groups: groupsWithHits };
+  }
+
   async function submit(e) {
     e && e.preventDefault();
     error = '';
     loading = true;
     try {
       if (!city) city = defaultCities;
+      city = capitalizeCommaSeparated(city);
+
       if (!q) q = defaultQ;
       const url = `http://localhost:3000/jobs?city=${encodeURIComponent(city)}&q=${encodeURIComponent(q)}`;
       const res = await request(url);
+      const { count, groups } = computeResultCount(res);
       jobs.loadFromApi(res);
 
-      dispatch('loaded', { count: (res?.queries || []).length });
+      dispatch('loaded', { count, groups });
     } catch (err) {
       error = err.message || 'Request failed';
     } finally {

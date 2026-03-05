@@ -1,9 +1,52 @@
 <script>
   import { jobs } from '../store/jobs.js';
   import Filter from './Filter.svelte';
+
+  let lastHitCount = null;
+  let lastGroupCount = null;
+
+  // Håll sammanfattningen i synk med jobbdatan (även efter reload)
+  $: {
+    const list = $jobs || [];
+    if (!list.length) {
+      lastHitCount = null;
+      lastGroupCount = null;
+    } else {
+      let hits = 0;
+      let groups = 0;
+      for (const entry of list) {
+        const afCount = Array.isArray(entry.af) ? entry.af.length : 0;
+        const liCount = Array.isArray(entry.linkedin)
+          ? entry.linkedin.length
+          : 0;
+        const totalForCity = afCount + liCount;
+        if (totalForCity > 0) {
+          groups += 1;
+          hits += totalForCity;
+        }
+      }
+      lastHitCount = hits;
+      lastGroupCount = groups;
+    }
+  }
 </script>
 
 <Filter />
+
+{#if lastHitCount !== null}
+  <div class="result-summary">
+    {#if lastHitCount === 0}
+      Inga sökträffar hittades.
+    {:else}
+      <strong>{lastHitCount}</strong>
+      sökträffar
+      {#if lastGroupCount !== null && lastGroupCount > 0}
+        i <strong>{lastGroupCount}</strong>
+        stad(er)
+      {/if}
+    {/if}
+  </div>
+{/if}
 
 {#if $jobs.length === 0}
   <div class="empty-state">
@@ -124,6 +167,12 @@
 
   .empty-state p {
     margin: 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .result-summary {
+    margin-top: 10px;
     font-size: 13px;
     color: var(--color-text-muted);
   }
