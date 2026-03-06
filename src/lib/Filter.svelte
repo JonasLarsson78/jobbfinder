@@ -81,7 +81,7 @@
       city = capitalizeCommaSeparated(city);
 
       if (!q) q = defaultQ;
-      const url = `http://localhost:3000/jobs?city=${encodeURIComponent(city)}&q=${encodeURIComponent(q)}`;
+      const url = `https://jobbfinder-api.vercel.app/jobs?city=${encodeURIComponent(city)}&q=${encodeURIComponent(q)}`;
       const res = await request(url);
       const { count, groups } = computeResultCount(res);
       jobs.loadFromApi(res);
