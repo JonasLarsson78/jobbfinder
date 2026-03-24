@@ -11,6 +11,7 @@
 
   let city = '';
   let q = '';
+  let exclude = '';
   let loading = false;
   let error = '';
   const defaultCities = 'Lund,Malmö,Helsingborg';
@@ -21,10 +22,11 @@
   if (initialFilter) {
     city = initialFilter.city || '';
     q = initialFilter.q || '';
+    exclude = initialFilter.exclude || '';
   }
 
   // Spara filtervärden löpande så de alltid är persistenta
-  $: searchFilter.set({ city, q });
+  $: searchFilter.set({ city, q, exclude });
 
   function computeResultCount(data) {
     if (!data) return { count: 0, groups: 0 };
@@ -81,7 +83,10 @@
       city = capitalizeCommaSeparated(city);
 
       if (!q) q = defaultQ;
-      const url = `https://jobbfinder-api.vercel.app/jobs?city=${encodeURIComponent(city)}&q=${encodeURIComponent(q)}`;
+      // normalize exclude (comma-separated values)
+      exclude = exclude || '';
+      exclude = capitalizeCommaSeparated(exclude);
+      const url = `https://jobbfinder-api.vercel.app/jobs?city=${encodeURIComponent(city)}&q=${encodeURIComponent(q)}&exclude=${encodeURIComponent(exclude)}`;
       const res = await request(url);
       const { count, groups } = computeResultCount(res);
       jobs.loadFromApi(res);
@@ -115,6 +120,15 @@
           placeholder="frontend-utvecklare"
           bind:value={q}
           aria-label="Sökord"
+        />
+      </label>
+
+      <label>
+        <span class="label-text">Exkludera</span>
+        <input
+          placeholder="företag1,företag2 eller ord att exkludera"
+          bind:value={exclude}
+          aria-label="Exkludera"
         />
       </label>
 

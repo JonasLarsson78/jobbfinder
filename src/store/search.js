@@ -33,4 +33,5 @@ function createPersistedStore(key, initialValue) {
 export const searchFilter = createPersistedStore('jobbfinder:search-filter', {
   city: '',
   q: '',
+  exclude: '',
 });
