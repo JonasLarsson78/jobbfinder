@@ -53,7 +53,9 @@ const createJobs = () => {
       // Helper för att undvika dubbletter på id-nivå
       const filterOutExisting = (oldJobs, newJobs) => {
         const newIds = newJobs.map((j) => j.id);
-        return oldJobs.filter((j) => (j.applied || j.ignored) && !newIds.includes(j.id));
+        return oldJobs.filter(
+          (j) => (j.applied || j.ignored) && !newIds.includes(j.id)
+        );
       };
       if (!exists) {
         // Endast spara applied/ignored som INTE redan finns i nya resultatet
@@ -66,11 +68,11 @@ const createJobs = () => {
         // Lägg till gamla applied/ignored som inte finns i nya resultatet
         exists.af = [
           ...(exists.af || []),
-          ...filterOutExisting(oldEntry.af || [], exists.af || [])
+          ...filterOutExisting(oldEntry.af || [], exists.af || []),
         ];
         exists.linkedin = [
           ...(exists.linkedin || []),
-          ...filterOutExisting(oldEntry.linkedin || [], exists.linkedin || [])
+          ...filterOutExisting(oldEntry.linkedin || [], exists.linkedin || []),
         ];
       }
     });
