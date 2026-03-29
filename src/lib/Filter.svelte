@@ -86,8 +86,8 @@
       // normalize exclude (comma-separated values)
       exclude = exclude || '';
       exclude = capitalizeCommaSeparated(exclude);
-      //const url = `https://jobbfinder-api.vercel.app/jobs?city=${encodeURIComponent(city)}&q=${encodeURIComponent(q)}&exclude=${encodeURIComponent(exclude)}`;
-      const url = `http://localhost:4000/jobs?city=${encodeURIComponent(city)}&q=${encodeURIComponent(q)}&exclude=${encodeURIComponent(exclude)}`;
+      const url = `https://jobbfinder-api.vercel.app/jobs?city=${encodeURIComponent(city)}&q=${encodeURIComponent(q)}&exclude=${encodeURIComponent(exclude)}`;
+      //const url = `http://localhost:4000/jobs?city=${encodeURIComponent(city)}&q=${encodeURIComponent(q)}&exclude=${encodeURIComponent(exclude)}`;
       const res = await request(url);
       const { count, groups } = computeResultCount(res);
       jobs.loadFromApi(res);
