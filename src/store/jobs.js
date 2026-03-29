@@ -50,29 +50,28 @@ const createJobs = () => {
     // 2. Lägg till gamla entries som inte finns i nya, men som har applied/ignored
     existing.forEach((oldEntry) => {
       const exists = merged.find((e) => e.city === oldEntry.city);
+      // Helper för att undvika dubbletter på id-nivå
+      const filterOutExisting = (oldJobs, newJobs) => {
+        const newIds = newJobs.map((j) => j.id);
+        return oldJobs.filter((j) => (j.applied || j.ignored) && !newIds.includes(j.id));
+      };
       if (!exists) {
-        // Endast spara om det finns applied/ignored
-        const af = (oldEntry.af || []).filter((j) => j.applied || j.ignored);
-        const linkedin = (oldEntry.linkedin || []).filter(
-          (j) => j.applied || j.ignored
-        );
+        // Endast spara applied/ignored som INTE redan finns i nya resultatet
+        const af = filterOutExisting(oldEntry.af || [], []);
+        const linkedin = filterOutExisting(oldEntry.linkedin || [], []);
         if (af.length > 0 || linkedin.length > 0) {
           merged.push({ city: oldEntry.city, af, linkedin });
         }
       } else {
-        // Om staden finns, lägg till gamla applied/ignored som inte finns i nya
-        const m = exists;
-        const addMissing = (oldJobs, newJobs) => {
-          const ids = newJobs.map((j) => j.id);
-          return [
-            ...newJobs,
-            ...oldJobs.filter(
-              (j) => (j.applied || j.ignored) && !ids.includes(j.id)
-            ),
-          ];
-        };
-        m.af = addMissing(oldEntry.af || [], m.af || []);
-        m.linkedin = addMissing(oldEntry.linkedin || [], m.linkedin || []);
+        // Lägg till gamla applied/ignored som inte finns i nya resultatet
+        exists.af = [
+          ...(exists.af || []),
+          ...filterOutExisting(oldEntry.af || [], exists.af || [])
+        ];
+        exists.linkedin = [
+          ...(exists.linkedin || []),
+          ...filterOutExisting(oldEntry.linkedin || [], exists.linkedin || [])
+        ];
       }
     });
     return merged;
