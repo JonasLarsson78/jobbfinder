@@ -1,4 +1,24 @@
 <script>
+    // Deduplicera jobb på id-nivå per stad och källa
+    function dedupedJobs(jobsList) {
+      return jobsList.map(entry => {
+        const seenAf = new Set();
+        const seenLi = new Set();
+        return {
+          ...entry,
+          af: (entry.af || []).filter(job => {
+            if (seenAf.has(job.id)) return false;
+            seenAf.add(job.id);
+            return true;
+          }),
+          linkedin: (entry.linkedin || []).filter(job => {
+            if (seenLi.has(job.id)) return false;
+            seenLi.add(job.id);
+            return true;
+          })
+        };
+      });
+    }
   import { jobs } from '../store/jobs.js';
   import Filter from './Filter.svelte';
 
@@ -61,14 +81,14 @@
 {:else}
   <!-- Ej sökta jobb -->
   <h4>Ej sökta jobb</h4>
-  {#each $jobs.filter((entry) => {
+  {#each dedupedJobs($jobs.filter((entry) => {
     // entry._fromSearch är satt på nya sökresultat, annars undefined
     // Om _fromSearch inte finns, visa inte i ej sökta-listan
     if (!entry._fromSearch) return false;
     const afActive = entry.af ? entry.af.some((a) => !a.applied && !a.ignored) : false;
     const liActive = entry.linkedin ? entry.linkedin.some((l) => !l.applied && !l.ignored) : false;
     return afActive || liActive;
-  }) as entry (entry.city)}
+  })) as entry (entry.city)}
     <hr />
     <section class="city-block">
       <div class="city-header">
