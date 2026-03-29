@@ -91,7 +91,6 @@
       const res = await request(url);
       const { count, groups } = computeResultCount(res);
       jobs.loadFromApi(res);
-      console.log(res);
 
       dispatch('loaded', { count, groups });
     } catch (err) {
