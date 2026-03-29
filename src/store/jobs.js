@@ -26,6 +26,58 @@ const persistJobs = (value) => {
 const createJobs = () => {
   const { subscribe, set, update } = writable(loadInitialJobs());
 
+  // Helper: merge new jobs with old, preserving applied/ignored
+  function mergeWithExisting(existing, incoming) {
+    // existing: [{city, af, linkedin}], incoming: [{city, af, linkedin}]
+    // 1. Mappa in nya jobb och bevara status från gamla, samt markera som från senaste sökning
+    const merged = incoming.map((newEntry) => {
+      const oldEntry = existing.find((e) => e.city === newEntry.city);
+      const mergeJobs = (oldJobs, newJobs) =>
+        newJobs.map((job) => {
+          const oldJob = oldJobs?.find((j) => j.id === job.id);
+          return oldJob
+            ? { ...job, applied: oldJob.applied, ignored: oldJob.ignored }
+            : job;
+        });
+      return {
+        city: newEntry.city,
+        af: mergeJobs(oldEntry?.af, newEntry.af),
+        linkedin: mergeJobs(oldEntry?.linkedin, newEntry.linkedin),
+        _fromSearch: true,
+      };
+    });
+
+    // 2. Lägg till gamla entries som inte finns i nya, men som har applied/ignored
+    existing.forEach((oldEntry) => {
+      const exists = merged.find((e) => e.city === oldEntry.city);
+      if (!exists) {
+        // Endast spara om det finns applied/ignored
+        const af = (oldEntry.af || []).filter((j) => j.applied || j.ignored);
+        const linkedin = (oldEntry.linkedin || []).filter(
+          (j) => j.applied || j.ignored
+        );
+        if (af.length > 0 || linkedin.length > 0) {
+          merged.push({ city: oldEntry.city, af, linkedin });
+        }
+      } else {
+        // Om staden finns, lägg till gamla applied/ignored som inte finns i nya
+        const m = exists;
+        const addMissing = (oldJobs, newJobs) => {
+          const ids = newJobs.map((j) => j.id);
+          return [
+            ...newJobs,
+            ...oldJobs.filter(
+              (j) => (j.applied || j.ignored) && !ids.includes(j.id)
+            ),
+          ];
+        };
+        m.af = addMissing(oldEntry.af || [], m.af || []);
+        m.linkedin = addMissing(oldEntry.linkedin || [], m.linkedin || []);
+      }
+    });
+    return merged;
+  }
+
   const transformApiData = (data) => {
     if (!data) return [];
 
@@ -176,8 +228,11 @@ const createJobs = () => {
     update,
     loadFromApi(apiData) {
       const transformed = transformApiData(apiData);
-      set(transformed);
-      persistJobs(transformed);
+      update((current) => {
+        const merged = mergeWithExisting(current, transformed);
+        persistJobs(merged);
+        return merged;
+      });
     },
     addCityEntry(entry) {
       update((list) => {

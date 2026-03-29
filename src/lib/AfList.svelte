@@ -15,9 +15,12 @@
       let hits = 0;
       let groups = 0;
       for (const entry of list) {
-        const afCount = Array.isArray(entry.af) ? entry.af.length : 0;
+        // Räkna ENDAST ej sökta och ej ignorerade
+        const afCount = Array.isArray(entry.af)
+          ? entry.af.filter((a) => !a.applied && !a.ignored).length
+          : 0;
         const liCount = Array.isArray(entry.linkedin)
-          ? entry.linkedin.length
+          ? entry.linkedin.filter((l) => !l.applied && !l.ignored).length
           : 0;
         const totalForCity = afCount + liCount;
         if (totalForCity > 0) {
@@ -59,6 +62,9 @@
   <!-- Ej sökta jobb -->
   <h4>Ej sökta jobb</h4>
   {#each $jobs.filter((entry) => {
+    // entry._fromSearch är satt på nya sökresultat, annars undefined
+    // Om _fromSearch inte finns, visa inte i ej sökta-listan
+    if (!entry._fromSearch) return false;
     const afActive = entry.af ? entry.af.some((a) => !a.applied && !a.ignored) : false;
     const liActive = entry.linkedin ? entry.linkedin.some((l) => !l.applied && !l.ignored) : false;
     return afActive || liActive;
