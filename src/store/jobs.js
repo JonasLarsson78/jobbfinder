@@ -67,7 +67,18 @@ const createJobs = () => {
               ? q.linkedinMatches
               : [];
 
-        return { city, af, linkedin };
+        // Lägg till applied:false och ignored:false på varje jobb
+        const afWithFlags = af.map((job) => ({
+          ...job,
+          applied: false,
+          ignored: false,
+        }));
+        const linkedinWithFlags = linkedin.map((job) => ({
+          ...job,
+          applied: false,
+          ignored: false,
+        }));
+        return { city, af: afWithFlags, linkedin: linkedinWithFlags };
       })
       .filter(
         (entry) =>
@@ -77,6 +88,89 @@ const createJobs = () => {
   };
 
   return {
+    markAsIgnored(type, city, jobId) {
+      update((list) => {
+        const next = list.map((entry) => {
+          if (entry.city !== city) return entry;
+          const updated = { ...entry };
+          if (type === 'af') {
+            updated.af = entry.af.map((job) =>
+              job.id === jobId ? { ...job, ignored: true } : job
+            );
+          } else if (type === 'linkedin') {
+            updated.linkedin = entry.linkedin.map((job) =>
+              job.id === jobId ? { ...job, ignored: true } : job
+            );
+          }
+          return updated;
+        });
+        persistJobs(next);
+        return next;
+      });
+    },
+
+    undoIgnored(type, city, jobId) {
+      update((list) => {
+        const next = list.map((entry) => {
+          if (entry.city !== city) return entry;
+          const updated = { ...entry };
+          if (type === 'af') {
+            updated.af = entry.af.map((job) =>
+              job.id === jobId ? { ...job, ignored: false } : job
+            );
+          } else if (type === 'linkedin') {
+            updated.linkedin = entry.linkedin.map((job) =>
+              job.id === jobId ? { ...job, ignored: false } : job
+            );
+          }
+          return updated;
+        });
+        persistJobs(next);
+        return next;
+      });
+    },
+    markAsApplied(type, city, jobId) {
+      // type: 'af' eller 'linkedin', city: string, jobId: id på jobbet
+      update((list) => {
+        const next = list.map((entry) => {
+          if (entry.city !== city) return entry;
+          const updated = { ...entry };
+          if (type === 'af') {
+            updated.af = entry.af.map((job) =>
+              job.id === jobId ? { ...job, applied: true } : job
+            );
+          } else if (type === 'linkedin') {
+            updated.linkedin = entry.linkedin.map((job) =>
+              job.id === jobId ? { ...job, applied: true } : job
+            );
+          }
+          return updated;
+        });
+        persistJobs(next);
+        return next;
+      });
+    },
+
+    undoApplied(type, city, jobId) {
+      update((list) => {
+        const next = list.map((entry) => {
+          if (entry.city !== city) return entry;
+          const updated = { ...entry };
+          if (type === 'af') {
+            updated.af = entry.af.map((job) =>
+              job.id === jobId ? { ...job, applied: false } : job
+            );
+          } else if (type === 'linkedin') {
+            updated.linkedin = entry.linkedin.map((job) =>
+              job.id === jobId ? { ...job, applied: false } : job
+            );
+          }
+          return updated;
+        });
+        persistJobs(next);
+        return next;
+      });
+    },
     subscribe,
     set,
     update,
