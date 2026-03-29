@@ -58,7 +58,11 @@
 {:else}
   <!-- Ej sökta jobb -->
   <h4>Ej sökta jobb</h4>
-  {#each $jobs as entry (entry.city)}
+  {#each $jobs.filter((entry) => {
+    const afActive = entry.af ? entry.af.some((a) => !a.applied && !a.ignored) : false;
+    const liActive = entry.linkedin ? entry.linkedin.some((l) => !l.applied && !l.ignored) : false;
+    return afActive || liActive;
+  }) as entry (entry.city)}
     <hr />
     <section class="city-block">
       <div class="city-header">
@@ -163,185 +167,191 @@
     </section>
   {/each}
 
-  <!-- Ignorerade jobb (längst ner, utanför stad-loopen) -->
-  <h4>Ignorerade</h4>
-  {#each $jobs.filter((e) => (e.af && e.af.some((a) => a.ignored)) || (e.linkedin && e.linkedin.some((l) => l.ignored))) as entry (entry.city)}
-    <section class="city-block">
-      <div class="city-header">
-        <h3>{entry.city}</h3>
-      </div>
-      {#if entry.af && entry.af.length}
-        {#each entry.af.filter((a) => a.ignored) as a (a.id)}
-          <article class="job-card af applied">
-            <header class="job-header">
-              <span class="source-pill af-pill">Arbetsförmedlingen</span>
-              <h2>
-                <a
-                  href={a.webpage_url}
-                  target="_blank"
-                  rel="noopener noreferrer">{a.headline}</a
-                >
-              </h2>
-            </header>
-            <div class="meta-grid">
-              {#if a.employer}
-                <div class="meta-item">
-                  <span>Arbetsgivare</span><strong>{a.employer}</strong>
-                </div>
-              {/if}
-              {#if a.application_deadline}
-                <div class="meta-item">
-                  <span>Sista ansökningsdag</span>
-                  <strong>{a.application_deadline}</strong>
-                </div>
-              {/if}
-              {#if a.number_of_vacancies}
-                <div class="meta-item">
-                  <span>Antal lediga platser</span>
-                  <strong>{a.number_of_vacancies}</strong>
-                </div>
-              {/if}
-              {#if a.conditions}
-                <div class="meta-item full-width">
-                  <span>Villkor</span>
-                  <strong>{a.conditions}</strong>
-                </div>
-              {/if}
-            </div>
-            <span class="applied-label">Ignorerad</span>
-            <button on:click={() => jobs.undoIgnored('af', entry.city, a.id)}>
-              Ångra
-            </button>
-          </article>
-        {/each}
-      {/if}
-      {#if entry.linkedin && entry.linkedin.length}
-        {#each entry.linkedin.filter((l) => l.ignored) as l (l.id)}
-          <article class="job-card li applied">
-            <header class="job-header">
-              <span class="source-pill li-pill">LinkedIn</span>
-              <h2>
-                <a href={l.url} target="_blank" rel="noopener noreferrer"
-                  >{l.title}</a
-                >
-              </h2>
-            </header>
-            <div class="meta-grid">
-              <div class="meta-item">
-                <span>Företag</span><strong>{l.company}</strong>
-              </div>
-              {#if l.location}
-                <div class="meta-item">
-                  <span>Plats</span><strong>{l.location}</strong>
-                </div>
-              {/if}
-              {#if l.datetime}
-                <div class="meta-item">
-                  <span>Publicerad</span><strong>{l.datetime}</strong>
-                </div>
-              {/if}
-            </div>
-            <span class="applied-label">Ignorerad</span>
-            <button
-              on:click={() => jobs.undoIgnored('linkedin', entry.city, l.id)}
-            >
-              Ångra
-            </button>
-          </article>
-        {/each}
-      {/if}
-    </section>
-  {/each}
+  {#if $jobs.some((e) => (e.af && e.af.some((a) => a.ignored)) || (e.linkedin && e.linkedin.some((l) => l.ignored)) || (e.af && e.af.some((a) => a.applied)) || (e.linkedin && e.linkedin.some((l) => l.applied)))}
+    <hr style="border-color: black; border-width: 2px;" />
+  {/if}
 
-  <!-- Sökt jobb (längst ner, utanför stad-loopen) -->
-  <h4>Sökt</h4>
-  {#each $jobs.filter((e) => (e.af && e.af.some((a) => a.applied)) || (e.linkedin && e.linkedin.some((l) => l.applied))) as entry (entry.city)}
-    <section class="city-block">
-      <div class="city-header">
-        <h3>{entry.city}</h3>
-      </div>
-      {#if entry.af && entry.af.length}
-        {#each entry.af.filter((a) => a.applied) as a (a.id)}
-          <article class="job-card af applied">
-            <header class="job-header">
-              <span class="source-pill af-pill">Arbetsförmedlingen</span>
-              <h2>
-                <a
-                  href={a.webpage_url}
-                  target="_blank"
-                  rel="noopener noreferrer">{a.headline}</a
-                >
-              </h2>
-            </header>
-            <div class="meta-grid">
-              {#if a.employer}
-                <div class="meta-item">
-                  <span>Arbetsgivare</span><strong>{a.employer}</strong>
-                </div>
-              {/if}
-              {#if a.application_deadline}
-                <div class="meta-item">
-                  <span>Sista ansökningsdag</span>
-                  <strong>{a.application_deadline}</strong>
-                </div>
-              {/if}
-              {#if a.number_of_vacancies}
-                <div class="meta-item">
-                  <span>Antal lediga platser</span>
-                  <strong>{a.number_of_vacancies}</strong>
-                </div>
-              {/if}
-              {#if a.conditions}
-                <div class="meta-item full-width">
-                  <span>Villkor</span>
-                  <strong>{a.conditions}</strong>
-                </div>
-              {/if}
-            </div>
-            <span class="applied-label">Sökt</span>
-            <button on:click={() => jobs.undoApplied('af', entry.city, a.id)}>
-              Ångra
-            </button>
-          </article>
-        {/each}
-      {/if}
-      {#if entry.linkedin && entry.linkedin.length}
-        {#each entry.linkedin.filter((l) => l.applied) as l (l.id)}
-          <article class="job-card li applied">
-            <header class="job-header">
-              <span class="source-pill li-pill">LinkedIn</span>
-              <h2>
-                <a href={l.url} target="_blank" rel="noopener noreferrer"
-                  >{l.title}</a
-                >
-              </h2>
-            </header>
-            <div class="meta-grid">
-              <div class="meta-item">
-                <span>Företag</span><strong>{l.company}</strong>
+  {#if $jobs.some((e) => (e.af && e.af.some((a) => a.ignored)) || (e.linkedin && e.linkedin.some((l) => l.ignored)))}
+    <h4 style="color: #f59e42;">Ignorerade</h4>
+    {#each $jobs.filter((e) => (e.af && e.af.some((a) => a.ignored)) || (e.linkedin && e.linkedin.some((l) => l.ignored))) as entry (entry.city)}
+      <section class="city-block">
+        <div class="city-header">
+          <h3>{entry.city}</h3>
+        </div>
+        {#if entry.af && entry.af.length}
+          {#each entry.af.filter((a) => a.ignored) as a (a.id)}
+            <article class="job-card af ignored">
+              <header class="job-header">
+                <span class="source-pill af-pill">Arbetsförmedlingen</span>
+                <h2>
+                  <a
+                    href={a.webpage_url}
+                    target="_blank"
+                    rel="noopener noreferrer">{a.headline}</a
+                  >
+                </h2>
+              </header>
+              <div class="meta-grid">
+                {#if a.employer}
+                  <div class="meta-item">
+                    <span>Arbetsgivare</span><strong>{a.employer}</strong>
+                  </div>
+                {/if}
+                {#if a.application_deadline}
+                  <div class="meta-item">
+                    <span>Sista ansökningsdag</span>
+                    <strong>{a.application_deadline}</strong>
+                  </div>
+                {/if}
+                {#if a.number_of_vacancies}
+                  <div class="meta-item">
+                    <span>Antal lediga platser</span>
+                    <strong>{a.number_of_vacancies}</strong>
+                  </div>
+                {/if}
+                {#if a.conditions}
+                  <div class="meta-item full-width">
+                    <span>Villkor</span>
+                    <strong>{a.conditions}</strong>
+                  </div>
+                {/if}
               </div>
-              {#if l.location}
+              <span class="applied-label">Ignorerad</span>
+              <button on:click={() => jobs.undoIgnored('af', entry.city, a.id)}>
+                Ångra
+              </button>
+            </article>
+          {/each}
+        {/if}
+        {#if entry.linkedin && entry.linkedin.length}
+          {#each entry.linkedin.filter((l) => l.ignored) as l (l.id)}
+            <article class="job-card li ignored">
+              <header class="job-header">
+                <span class="source-pill li-pill">LinkedIn</span>
+                <h2>
+                  <a href={l.url} target="_blank" rel="noopener noreferrer"
+                    >{l.title}</a
+                  >
+                </h2>
+              </header>
+              <div class="meta-grid">
                 <div class="meta-item">
-                  <span>Plats</span><strong>{l.location}</strong>
+                  <span>Företag</span><strong>{l.company}</strong>
                 </div>
-              {/if}
-              {#if l.datetime}
+                {#if l.location}
+                  <div class="meta-item">
+                    <span>Plats</span><strong>{l.location}</strong>
+                  </div>
+                {/if}
+                {#if l.datetime}
+                  <div class="meta-item">
+                    <span>Publicerad</span><strong>{l.datetime}</strong>
+                  </div>
+                {/if}
+              </div>
+              <span class="applied-label">Ignorerad</span>
+              <button
+                on:click={() => jobs.undoIgnored('linkedin', entry.city, l.id)}
+              >
+                Ångra
+              </button>
+            </article>
+          {/each}
+        {/if}
+      </section>
+    {/each}
+  {/if}
+
+  {#if $jobs.some((e) => (e.af && e.af.some((a) => a.applied)) || (e.linkedin && e.linkedin.some((l) => l.applied)))}
+    <h4 style="color: #10b981;">Sökt</h4>
+    {#each $jobs.filter((e) => (e.af && e.af.some((a) => a.applied)) || (e.linkedin && e.linkedin.some((l) => l.applied))) as entry (entry.city)}
+      <section class="city-block">
+        <div class="city-header">
+          <h3>{entry.city}</h3>
+        </div>
+        {#if entry.af && entry.af.length}
+          {#each entry.af.filter((a) => a.applied) as a (a.id)}
+            <article class="job-card af applied-final">
+              <header class="job-header">
+                <span class="source-pill af-pill">Arbetsförmedlingen</span>
+                <h2>
+                  <a
+                    href={a.webpage_url}
+                    target="_blank"
+                    rel="noopener noreferrer">{a.headline}</a
+                  >
+                </h2>
+              </header>
+              <div class="meta-grid">
+                {#if a.employer}
+                  <div class="meta-item">
+                    <span>Arbetsgivare</span><strong>{a.employer}</strong>
+                  </div>
+                {/if}
+                {#if a.application_deadline}
+                  <div class="meta-item">
+                    <span>Sista ansökningsdag</span>
+                    <strong>{a.application_deadline}</strong>
+                  </div>
+                {/if}
+                {#if a.number_of_vacancies}
+                  <div class="meta-item">
+                    <span>Antal lediga platser</span>
+                    <strong>{a.number_of_vacancies}</strong>
+                  </div>
+                {/if}
+                {#if a.conditions}
+                  <div class="meta-item full-width">
+                    <span>Villkor</span>
+                    <strong>{a.conditions}</strong>
+                  </div>
+                {/if}
+              </div>
+              <span class="applied-label">Sökt</span>
+              <button on:click={() => jobs.undoApplied('af', entry.city, a.id)}>
+                Ångra
+              </button>
+            </article>
+          {/each}
+        {/if}
+        {#if entry.linkedin && entry.linkedin.length}
+          {#each entry.linkedin.filter((l) => l.applied) as l (l.id)}
+            <article class="job-card li applied-final">
+              <header class="job-header">
+                <span class="source-pill li-pill">LinkedIn</span>
+                <h2>
+                  <a href={l.url} target="_blank" rel="noopener noreferrer"
+                    >{l.title}</a
+                  >
+                </h2>
+              </header>
+              <div class="meta-grid">
                 <div class="meta-item">
-                  <span>Publicerad</span><strong>{l.datetime}</strong>
+                  <span>Företag</span><strong>{l.company}</strong>
                 </div>
-              {/if}
-            </div>
-            <span class="applied-label">Sökt</span>
-            <button
-              on:click={() => jobs.undoApplied('linkedin', entry.city, l.id)}
-            >
-              Ångra
-            </button>
-          </article>
-        {/each}
-      {/if}
-    </section>
-  {/each}
+                {#if l.location}
+                  <div class="meta-item">
+                    <span>Plats</span><strong>{l.location}</strong>
+                  </div>
+                {/if}
+                {#if l.datetime}
+                  <div class="meta-item">
+                    <span>Publicerad</span><strong>{l.datetime}</strong>
+                  </div>
+                {/if}
+              </div>
+              <span class="applied-label">Sökt</span>
+              <button
+                on:click={() => jobs.undoApplied('linkedin', entry.city, l.id)}
+              >
+                Ångra
+              </button>
+            </article>
+          {/each}
+        {/if}
+      </section>
+    {/each}
+  {/if}
 
   <div class="legend">
     <span><span class="badge af-badge">AF</span> Arbetsförmedlingen</span>
@@ -526,5 +536,47 @@
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
+  }
+
+  .job-card.ignored {
+    background: #fff7e6;
+    border: 2px solid #f59e42;
+    box-shadow: 0 2px 8px 0 #f59e4222;
+    position: relative;
+  }
+  .job-card.ignored::after {
+    content: 'Ignorerad';
+    position: absolute;
+    top: 10px;
+    right: 18px;
+    background: #f59e42;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    box-shadow: 0 1px 4px #f59e4244;
+  }
+
+  .job-card.applied-final {
+    background: #e6f7ef;
+    border: 2px solid #10b981;
+    box-shadow: 0 2px 8px 0 #10b98122;
+    position: relative;
+  }
+  .job-card.applied-final::after {
+    content: 'Sökt';
+    position: absolute;
+    top: 10px;
+    right: 18px;
+    background: #10b981;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    box-shadow: 0 1px 4px #10b98144;
   }
 </style>
